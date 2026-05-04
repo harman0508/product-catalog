@@ -7,12 +7,17 @@ class ServiceTest(TestCase):
 
     def setUp(self):
         self.cat = Category.objects.create(name="Electronics")
-        Product.objects.create(name="Laptop", category=self.cat)
+        self.p1 = Product.objects.create(
+            name="Laptop", category=self.cat, featured=True, priority="high"
+        )
+        self.p2 = Product.objects.create(
+            name="Phone", category=self.cat, featured=False, priority="low"
+        )
 
     def test_get_products_no_filters(self):
         service = ProductService()
         result = service.get_products(query=None, category=None)
-        self.assertEqual(result.count(), 1)
+        self.assertEqual(result.count(), 2)
 
     def test_get_products_search(self):
         service = ProductService()
@@ -27,9 +32,31 @@ class ServiceTest(TestCase):
     def test_get_products_by_category(self):
         service = ProductService()
         result = service.get_products(query=None, category=str(self.cat.id))
-        self.assertEqual(result.count(), 1)
+        self.assertEqual(result.count(), 2)
 
     def test_get_products_invalid_category(self):
         service = ProductService()
         with self.assertRaises(ValueError):
             service.get_products(query=None, category="abc")
+
+    def test_get_featured(self):
+        service = ProductService()
+        result = service.get_featured()
+        self.assertEqual(result.count(), 1)
+        self.assertEqual(result.first().name, "Laptop")
+
+    def test_get_by_priority(self):
+        service = ProductService()
+        result = service.get_by_priority("high")
+        self.assertEqual(result.count(), 1)
+        self.assertEqual(result.first().name, "Laptop")
+
+    def test_get_by_priority_invalid(self):
+        service = ProductService()
+        with self.assertRaises(ValueError):
+            service.get_by_priority("urgent")
+
+    def test_get_products_by_category_id(self):
+        service = ProductService()
+        result = service.get_products_by_category(self.cat.id)
+        self.assertEqual(result.count(), 2)
