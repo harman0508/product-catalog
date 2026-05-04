@@ -31,9 +31,10 @@ test("displays products from API", async () => {
     data: [
       {
         id: 1,
-        name: "Laptop",
+        title: "Laptop",
         category_name: "Electronics",
-        featured: true,
+        price: "999.99",
+        is_featured: true,
         priority: "high",
         inventory: { quantity: 10 },
       },
@@ -48,6 +49,7 @@ test("displays products from API", async () => {
     expect(screen.getByText(/Stock: 10/)).toBeInTheDocument();
     expect(screen.getByText(/Featured/)).toBeInTheDocument();
     expect(screen.getByText(/Priority: high/)).toBeInTheDocument();
+    expect(screen.getByText(/\$999.99/)).toBeInTheDocument();
   });
 });
 
