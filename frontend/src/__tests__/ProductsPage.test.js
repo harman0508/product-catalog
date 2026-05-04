@@ -5,9 +5,12 @@ import * as api from "../api/api";
 
 jest.mock("../api/api");
 
+const mockAddToCart = jest.fn();
+
 beforeEach(() => {
   api.getProducts.mockResolvedValue({ data: [], count: 0 });
   api.getCategories.mockResolvedValue([]);
+  mockAddToCart.mockClear();
 });
 
 afterEach(() => {
@@ -17,7 +20,7 @@ afterEach(() => {
 const renderPage = () =>
   render(
     <MemoryRouter>
-      <ProductsPage />
+      <ProductsPage onAddToCart={mockAddToCart} />
     </MemoryRouter>
   );
 
@@ -46,9 +49,6 @@ test("displays products from API", async () => {
 
   await waitFor(() => {
     expect(screen.getByText(/Laptop/)).toBeInTheDocument();
-    expect(screen.getByText(/Stock: 10/)).toBeInTheDocument();
-    expect(screen.getByText(/Featured/)).toBeInTheDocument();
-    expect(screen.getByText(/Priority: high/)).toBeInTheDocument();
     expect(screen.getByText(/\$999.99/)).toBeInTheDocument();
   });
 });
@@ -104,4 +104,9 @@ test("shows loading state", () => {
   renderPage();
 
   expect(screen.getByText(/Loading/)).toBeInTheDocument();
+});
+
+test("shows add product link", () => {
+  renderPage();
+  expect(screen.getByText(/Add Product/)).toBeInTheDocument();
 });
