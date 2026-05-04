@@ -1,54 +1,72 @@
 import axios from "axios";
 
-/**
- * Axios instance for API communication.
- * Uses environment variable if available, otherwise falls back to localhost.
- */
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "http://127.0.0.1:8000/api",
-  timeout: 5000
+  timeout: 5000,
 });
 
-/**
- * Centralized error handler for API responses.
- */
 const handleError = (error) => {
   if (error.response) {
-    // Server responded with error status
     return new Error(
       error.response.data?.error?.detail ||
-      error.response.data?.detail ||
-      "Server error"
+        error.response.data?.detail ||
+        JSON.stringify(error.response.data?.error || error.response.data) ||
+        "Server error"
     );
   } else if (error.request) {
-    // No response received
     return new Error("Network error - please check your connection");
-  } else {
-    // Unexpected error
-    return new Error("Unexpected error occurred");
   }
+  return new Error("Unexpected error occurred");
 };
 
-/**
- * Fetch products with optional filters (search, category, pagination)
- */
+// --- Products ---
+
 export const getProducts = async (params = {}) => {
   try {
     const res = await api.get("/products/", { params });
-
-    return {
-      data: res.data.results || res.data,
-      count: res.data.count || 0
-    };
-
+    return { data: res.data.results || res.data, count: res.data.count || 0 };
   } catch (error) {
     throw handleError(error);
   }
 };
 
-/**
- * Fetch all categories
- */
+export const getProduct = async (id) => {
+  try {
+    const res = await api.get(`/products/${id}/`);
+    return res.data;
+  } catch (error) {
+    throw handleError(error);
+  }
+};
+
+export const createProduct = async (data) => {
+  try {
+    const res = await api.post("/products/", data);
+    return res.data;
+  } catch (error) {
+    throw handleError(error);
+  }
+};
+
+export const updateProduct = async (id, data) => {
+  try {
+    const res = await api.put(`/products/${id}/`, data);
+    return res.data;
+  } catch (error) {
+    throw handleError(error);
+  }
+};
+
+export const deleteProduct = async (id) => {
+  try {
+    await api.delete(`/products/${id}/`);
+  } catch (error) {
+    throw handleError(error);
+  }
+};
+
+// --- Categories ---
+
 export const getCategories = async () => {
   try {
     const res = await api.get("/categories/");
