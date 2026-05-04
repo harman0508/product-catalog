@@ -31,15 +31,18 @@ A production-ready full-stack application for managing and displaying products, 
 
 ### Backend
 
-* RESTful APIs for Products and Categories
+* Full CRUD APIs for Products and Categories
 * Inventory management (per product)
+* Featured products endpoint
+* Priority-based filtering endpoint
+* Nested category-products endpoint
 * Service Layer (business logic separation)
 * Repository Layer (data access abstraction)
 * Pagination (PageNumberPagination, 10 per page)
 * Filtering:
-
   * Search by product name
   * Filter by category
+  * Filter by priority level
 * Seed data command
 * Structured error handling
 * Unit + API tests
@@ -50,6 +53,8 @@ A production-ready full-stack application for managing and displaying products, 
 * Search functionality (debounced)
 * Category filtering
 * Inventory display
+* Featured product badges
+* Priority display
 * Checklist page for requirement verification
 * API integration using Axios
 * Loading and error states
@@ -132,14 +137,29 @@ Frontend will run at:
 
 ### Products
 
-* `GET /api/products/`
-* `GET /api/products/?q=<search>`
-* `GET /api/products/?category=<id>`
-* `GET /api/products/?page=<num>`
+* `GET /api/products/` — List all products
+* `GET /api/products/{id}/` — Get product details
+* `POST /api/products/` — Create new product
+* `PUT /api/products/{id}/` — Update product
+* `DELETE /api/products/{id}/` — Delete product
+* `GET /api/products/featured/` — Get featured products
+* `GET /api/products/by_priority/?level=high` — Filter by priority
+* `GET /api/products/?q=<search>` — Search by name
+* `GET /api/products/?category=<id>` — Filter by category
+* `GET /api/products/?page=<num>` — Pagination
 
 ### Categories
 
-* `GET /api/categories/`
+* `GET /api/categories/` — List all categories
+* `GET /api/categories/{id}/` — Get category details
+* `POST /api/categories/` — Create new category
+* `PUT /api/categories/{id}/` — Update category
+* `DELETE /api/categories/{id}/` — Delete category
+* `GET /api/categories/{id}/products/` — Get all products in a category
+
+### Admin
+
+* `GET /admin/` — Django admin panel
 
 ---
 
@@ -168,8 +188,9 @@ python manage.py seed_data
 
 Includes:
 
-* Categories (e.g., Electronics)
-* Products (e.g., Laptop, Phone)
+* Categories (Electronics, Books)
+* Products (Laptop, Phone, Tablet, Headphones, Python Cookbook, Django Guide)
+* Featured flags and priority levels
 * Inventory quantities
 
 ---
@@ -192,9 +213,9 @@ npm test
 
 ### Coverage includes:
 
-* Model tests (8 tests — Category, Product, Inventory, relationships, cascade delete)
-* Service layer tests (5 tests — filtering, search, validation)
-* API endpoint tests (13 tests — CRUD, search, filtering, pagination, empty dataset, write rejection)
+* Model tests (10 tests — Category, Product, Inventory, relationships, cascade delete, featured/priority defaults)
+* Service layer tests (9 tests — filtering, search, featured, priority, validation)
+* API endpoint tests (27 tests — full CRUD, search, filtering, featured, priority, pagination, nested routes, empty dataset)
 * Frontend component tests with mocked API (7 tests — render, data display, error, empty state, category filter, search, loading)
 
 ### Edge Cases Covered:
@@ -203,7 +224,9 @@ npm test
 * Invalid query parameters
 * Search with no results
 * API failure handling
-* Write operations rejected (ReadOnlyModelViewSet)
+* Invalid priority level
+* Missing required parameters
+* Short product name validation
 * One-to-one inventory constraint
 * Cascade delete behavior
 
@@ -219,9 +242,9 @@ Encapsulates business logic and keeps views thin. Accepts an injectable reposito
 
 Abstracts database queries for better maintainability and scalability. Uses `select_related` for query optimization.
 
-### 3. DRF ReadOnlyModelViewSets
+### 3. DRF ModelViewSets
 
-Provide clean, scalable, read-only API routing with built-in pagination. Write operations are intentionally disabled since this is a product catalog display application.
+Provide full CRUD with clean, scalable API routing and built-in pagination. Custom `@action` decorators for featured and priority endpoints.
 
 ### 4. Custom Exception Handler
 
@@ -229,8 +252,7 @@ Wraps all API errors in a consistent `{ error, status_code }` format.
 
 ### 5. React Component Architecture
 
-* Separation of concerns
-* Reusable components
+* Separation of concerns with reusable components
 * Centralized API layer with error handling
 * Debounced search to reduce API calls
 
@@ -255,11 +277,11 @@ Wraps all API errors in a consistent `{ error, status_code }` format.
 
 ## 🚀 Future Improvements
 
+* Add authentication/authorization
 * Introduce Redis caching
 * Add CI/CD pipeline
 * Switch to PostgreSQL for production
 * Improve UI/UX design
-* Add authentication
 
 ---
 
