@@ -34,16 +34,16 @@ A production-ready full-stack application for managing and displaying products, 
 * Full CRUD APIs for Products and Categories
 * Inventory management (per product)
 * Featured products endpoint
-* Priority-based filtering endpoint
+* Priority-based filtering endpoint (low, medium, high, critical)
 * Nested category-products endpoint
 * Service Layer (business logic separation)
 * Repository Layer (data access abstraction)
 * Pagination (PageNumberPagination, 10 per page)
 * Filtering:
-  * Search by product name
+  * Search by product title
   * Filter by category
   * Filter by priority level
-* Seed data command
+* Seed data command + JSON fixtures (15 products, 5 categories)
 * Structured error handling
 * Unit + API tests
 
@@ -52,6 +52,7 @@ A production-ready full-stack application for managing and displaying products, 
 * Product listing page with pagination
 * Search functionality (debounced)
 * Category filtering
+* Price display
 * Inventory display
 * Featured product badges
 * Priority display
@@ -69,6 +70,7 @@ product-catalog/
 │   ├── manage.py
 │   ├── pytest.ini
 │   ├── requirements.txt
+│   ├── .env.example
 │   ├── showcase_api/
 │   │   ├── settings.py
 │   │   └── urls.py
@@ -79,6 +81,7 @@ product-catalog/
 │       ├── exceptions.py
 │       ├── services/
 │       ├── repositories/
+│       ├── fixtures/
 │       ├── tests/
 │       └── management/commands/
 │
@@ -114,6 +117,12 @@ python manage.py seed_data
 python manage.py runserver
 ```
 
+#### Alternative: Load fixture data instead of seed_data
+
+```bash
+python manage.py loaddata initial_data
+```
+
 Backend will run at:
 👉 http://127.0.0.1:8000/api/
 
@@ -144,7 +153,7 @@ Frontend will run at:
 * `DELETE /api/products/{id}/` — Delete product
 * `GET /api/products/featured/` — Get featured products
 * `GET /api/products/by_priority/?level=high` — Filter by priority
-* `GET /api/products/?q=<search>` — Search by name
+* `GET /api/products/?q=<search>` — Search by title
 * `GET /api/products/?category=<id>` — Filter by category
 * `GET /api/products/?page=<num>` — Pagination
 
@@ -186,12 +195,11 @@ Populate initial data using:
 python manage.py seed_data
 ```
 
-Includes:
+Or load the full fixture (15 products, 5 categories):
 
-* Categories (Electronics, Books)
-* Products (Laptop, Phone, Tablet, Headphones, Python Cookbook, Django Guide)
-* Featured flags and priority levels
-* Inventory quantities
+```bash
+python manage.py loaddata initial_data
+```
 
 ---
 
@@ -213,8 +221,8 @@ npm test
 
 ### Coverage includes:
 
-* Model tests (10 tests — Category, Product, Inventory, relationships, cascade delete, featured/priority defaults)
-* Service layer tests (9 tests — filtering, search, featured, priority, validation)
+* Model tests (13 tests — Category, Product, Inventory, relationships, cascade delete, defaults, choices)
+* Service layer tests (9 tests — filtering, search, featured, priority, validation, category products)
 * API endpoint tests (27 tests — full CRUD, search, filtering, featured, priority, pagination, nested routes, empty dataset)
 * Frontend component tests with mocked API (7 tests — render, data display, error, empty state, category filter, search, loading)
 
@@ -224,9 +232,9 @@ npm test
 * Invalid query parameters
 * Search with no results
 * API failure handling
-* Invalid priority level
+* Invalid priority level (including "critical" support)
 * Missing required parameters
-* Short product name validation
+* Short product title validation
 * One-to-one inventory constraint
 * Cascade delete behavior
 
