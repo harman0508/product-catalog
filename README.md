@@ -50,13 +50,21 @@ A production-ready full-stack application for managing and displaying products, 
 ### Frontend
 
 * Product listing page with pagination
+* Product detail view
+* Product creation form (submits to backend)
+* Product edit functionality (updates backend)
+* Product deletion (removes from backend)
+* Shopping cart (add, view, update quantities, remove)
+* Cart respects inventory stock limits
+* Cart reflects current prices
 * Search functionality (debounced)
 * Category filtering
 * Price display
 * Inventory display
 * Featured product badges
 * Priority display
-* Checklist page for requirement verification
+* Navbar with cart count
+* Checklist page (interactive accordion)
 * API integration using Axios
 * Loading and error states
 
@@ -111,7 +119,6 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-python manage.py makemigrations
 python manage.py migrate
 python manage.py seed_data
 python manage.py runserver
@@ -221,10 +228,10 @@ npm test
 
 ### Coverage includes:
 
-* Model tests (13 tests — Category, Product, Inventory, relationships, cascade delete, defaults, choices)
+* Model tests (11 tests — Category, Product, Inventory, relationships, cascade delete, defaults, choices)
 * Service layer tests (9 tests — filtering, search, featured, priority, validation, category products)
 * API endpoint tests (27 tests — full CRUD, search, filtering, featured, priority, pagination, nested routes, empty dataset)
-* Frontend component tests with mocked API (7 tests — render, data display, error, empty state, category filter, search, loading)
+* Frontend component tests with mocked API (8 tests — render, data display, error, empty state, category filter, search, loading, add product link)
 
 ### Edge Cases Covered:
 
