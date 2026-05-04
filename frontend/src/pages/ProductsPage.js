@@ -1,9 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { getProducts, getCategories } from "../api/api";
+import SearchBar from "../components/SearchBar";
+import CategoryFilter from "../components/CategoryFilter";
+import ProductList from "../components/ProductList";
+import Pagination from "../components/Pagination";
+import Loader from "../components/Loader";
+import ErrorMessage from "../components/ErrorMessage";
 
 /**
  * ProductsPage
- * Displays product list with search, category filter, and pagination.
+ *
+ * Main page that composes reusable components for
+ * search, filtering, listing, and pagination.
+ * Uses debounced search to minimize API calls.
  */
 function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -18,11 +27,7 @@ function ProductsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const pageSize = 10;
-
-  /**
-   * Fetch categories ONCE
-   */
+  // Fetch categories once on mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -36,29 +41,16 @@ function ProductsPage() {
     fetchCategories();
   }, []);
 
-  /**
-   * Fetch products with debounce
-   */
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchProducts();
-    }, 400);
-
-    return () => clearTimeout(delay);
-  }, [query, category, page]);
-
-  /**
-   * API call for products
-   */
-  const fetchProducts = async () => {
+  // Memoized fetch to avoid stale closures in debounce
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
       const res = await getProducts({
         q: query,
-        category: category,
-        page: page,
+        category,
+        page,
       });
 
       setProducts(res.data);
@@ -68,86 +60,52 @@ function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, category, page]);
 
-  /**
-   * Reset page when search changes
-   */
+  // Debounced product fetch
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchProducts();
+    }, 400);
+
+    return () => clearTimeout(delay);
+  }, [fetchProducts]);
+
+  // Reset page when filters change
   const handleSearch = (value) => {
-    setPage(1);  // ✅ FIX: reset pagination
+    setPage(1);
     setQuery(value);
   };
 
-  /**
-   * Reset page when category changes
-   */
   const handleCategory = (value) => {
-    setPage(1);  // ✅ FIX: reset pagination
+    setPage(1);
     setCategory(value);
   };
-
-  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div>
       <h1>Products</h1>
 
-      {/* SEARCH */}
-      <input
-        type="text"
-        placeholder="Search..."
-        value={query}
-        onChange={(e) => handleSearch(e.target.value)}
+      <SearchBar onSearch={handleSearch} />
+
+      <CategoryFilter
+        categories={categories}
+        onSelect={handleCategory}
       />
 
-      {/* CATEGORY FILTER */}
-      <select value={category} onChange={(e) => handleCategory(e.target.value)}>
-        <option value="">All Categories</option>
-        {categories.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+      {loading && <Loader />}
 
-      {/* LOADING */}
-      {loading && <p>Loading...</p>}
+      {error && <ErrorMessage message={error} />}
 
-      {/* ERROR */}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {!loading && !error && (
+        <ProductList products={products} />
+      )}
 
-      {/* PRODUCT LIST */}
-      {!loading && !error && products.length === 0 && <p>No products found</p>}
-
-      {!loading &&
-        !error &&
-        products.map((p) => (
-          <div key={p.id}>
-            <strong>{p.name}</strong> - Stock:{" "}
-            {p.inventory?.quantity ?? "N/A"}
-          </div>
-        ))}
-
-      {/* PAGINATION */}
-      <div style={{ marginTop: "20px" }}>
-        <button
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1}
-        >
-          Prev
-        </button>
-
-        <span style={{ margin: "0 10px" }}>
-          Page {page} of {totalPages || 1}
-        </span>
-
-        <button
-          onClick={() => setPage((p) => p + 1)}
-          disabled={page >= totalPages}
-        >
-          Next
-        </button>
-      </div>
+      <Pagination
+        count={totalCount}
+        page={page}
+        setPage={setPage}
+      />
     </div>
   );
 }
