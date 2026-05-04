@@ -4,7 +4,7 @@ from catalog.models import Product
 from catalog.repositories.product_repository import ProductRepository
 
 
-VALID_PRIORITIES = {"high", "medium", "low"}
+VALID_PRIORITIES = {"low", "medium", "high", "critical"}
 
 
 class ProductService:
@@ -43,7 +43,7 @@ class ProductService:
             ValueError: if priority level is invalid
         """
         if level not in VALID_PRIORITIES:
-            raise ValueError(f"Invalid priority level. Must be one of: {', '.join(VALID_PRIORITIES)}")
+            raise ValueError(f"Invalid priority level. Must be one of: {', '.join(sorted(VALID_PRIORITIES))}")
 
         return self.repo.get_by_priority(level)
 
