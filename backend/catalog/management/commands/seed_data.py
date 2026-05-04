@@ -6,27 +6,34 @@ class Command(BaseCommand):
     help = "Seed initial data"
 
     def handle(self, *args, **kwargs):
-        electronics, _ = Category.objects.get_or_create(name="Electronics")
-        books, _ = Category.objects.get_or_create(name="Books")
+        electronics, _ = Category.objects.get_or_create(
+            name="Electronics",
+            defaults={"description": "Latest gadgets and electronic devices"}
+        )
+        books, _ = Category.objects.get_or_create(
+            name="Books",
+            defaults={"description": "Books, magazines, and reading materials"}
+        )
 
         products_data = [
-            {"name": "Laptop", "category": electronics, "featured": True, "priority": "high"},
-            {"name": "Phone", "category": electronics, "featured": True, "priority": "high"},
-            {"name": "Tablet", "category": electronics, "featured": False, "priority": "medium"},
-            {"name": "Headphones", "category": electronics, "featured": False, "priority": "low"},
-            {"name": "Python Cookbook", "category": books, "featured": True, "priority": "medium"},
-            {"name": "Django Guide", "category": books, "featured": False, "priority": "low"},
+            {"title": "Laptop", "category": electronics, "is_featured": True, "priority": "high", "price": "999.99"},
+            {"title": "Phone", "category": electronics, "is_featured": True, "priority": "high", "price": "699.99"},
+            {"title": "Tablet", "category": electronics, "is_featured": False, "priority": "medium", "price": "449.99"},
+            {"title": "Headphones", "category": electronics, "is_featured": False, "priority": "low", "price": "149.99"},
+            {"title": "Python Cookbook", "category": books, "is_featured": True, "priority": "medium", "price": "44.99"},
+            {"title": "Django Guide", "category": books, "is_featured": False, "priority": "low", "price": "39.99"},
         ]
 
         quantities = [10, 20, 15, 50, 30, 25]
 
         for data, qty in zip(products_data, quantities):
             product, _ = Product.objects.update_or_create(
-                name=data["name"],
+                title=data["title"],
                 defaults={
                     "category": data["category"],
-                    "featured": data["featured"],
+                    "is_featured": data["is_featured"],
                     "priority": data["priority"],
+                    "price": data["price"],
                 }
             )
             Inventory.objects.update_or_create(
