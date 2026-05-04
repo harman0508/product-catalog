@@ -1,6 +1,6 @@
 import ProductCard from "./ProductCard";
 
-export default function ProductList({ products }) {
+export default function ProductList({ products, onAddToCart }) {
   if (!products.length) {
     return <p>No products available</p>;
   }
@@ -8,7 +8,7 @@ export default function ProductList({ products }) {
   return (
     <div>
       {products.map((p) => (
-        <ProductCard key={p.id} product={p} />
+        <ProductCard key={p.id} product={p} onAddToCart={onAddToCart} />
       ))}
     </div>
   );
