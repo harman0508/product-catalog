@@ -8,10 +8,10 @@ class ServiceTest(TestCase):
     def setUp(self):
         self.cat = Category.objects.create(name="Electronics")
         self.p1 = Product.objects.create(
-            name="Laptop", category=self.cat, featured=True, priority="high"
+            title="Laptop", category=self.cat, is_featured=True, priority="high"
         )
         self.p2 = Product.objects.create(
-            name="Phone", category=self.cat, featured=False, priority="low"
+            title="Phone", category=self.cat, is_featured=False, priority="low"
         )
 
     def test_get_products_no_filters(self):
@@ -43,13 +43,13 @@ class ServiceTest(TestCase):
         service = ProductService()
         result = service.get_featured()
         self.assertEqual(result.count(), 1)
-        self.assertEqual(result.first().name, "Laptop")
+        self.assertEqual(result.first().title, "Laptop")
 
     def test_get_by_priority(self):
         service = ProductService()
         result = service.get_by_priority("high")
         self.assertEqual(result.count(), 1)
-        self.assertEqual(result.first().name, "Laptop")
+        self.assertEqual(result.first().title, "Laptop")
 
     def test_get_by_priority_invalid(self):
         service = ProductService()
