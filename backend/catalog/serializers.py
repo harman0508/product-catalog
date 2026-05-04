@@ -20,7 +20,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "name", "category", "category_name", "inventory"]
+        fields = [
+            "id", "name", "category", "category_name",
+            "featured", "priority", "inventory"
+        ]
 
     def validate_name(self, value):
         if len(value.strip()) < 2:
