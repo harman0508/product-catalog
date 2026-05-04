@@ -7,10 +7,12 @@ class ProductAPITest(APITestCase):
     def setUp(self):
         self.cat = Category.objects.create(name="Electronics")
         self.p1 = Product.objects.create(
-            name="Laptop", category=self.cat, featured=True, priority="high"
+            title="Laptop", category=self.cat,
+            is_featured=True, priority="high", price="999.99"
         )
         self.p2 = Product.objects.create(
-            name="Phone", category=self.cat, featured=False, priority="low"
+            title="Phone", category=self.cat,
+            is_featured=False, priority="low", price="699.99"
         )
         Inventory.objects.create(product=self.p1, quantity=10)
 
@@ -23,28 +25,29 @@ class ProductAPITest(APITestCase):
 
     def test_list_returns_inventory(self):
         res = self.client.get("/api/products/")
-        product = next(p for p in res.data["results"] if p["name"] == "Laptop")
+        product = next(p for p in res.data["results"] if p["title"] == "Laptop")
         self.assertEqual(product["inventory"]["quantity"], 10)
 
     def test_retrieve_single_product(self):
         res = self.client.get(f"/api/products/{self.p1.id}/")
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data["name"], "Laptop")
+        self.assertEqual(res.data["title"], "Laptop")
 
     # --- Create ---
 
     def test_create_product(self):
         res = self.client.post("/api/products/", {
-            "name": "Tablet",
+            "title": "Tablet",
             "category": self.cat.id,
-            "priority": "medium"
+            "priority": "medium",
+            "price": "449.99"
         })
         self.assertEqual(res.status_code, 201)
-        self.assertEqual(res.data["name"], "Tablet")
+        self.assertEqual(res.data["title"], "Tablet")
 
-    def test_create_product_invalid_name(self):
+    def test_create_product_invalid_title(self):
         res = self.client.post("/api/products/", {
-            "name": "X",
+            "title": "X",
             "category": self.cat.id
         })
         self.assertEqual(res.status_code, 400)
@@ -53,12 +56,13 @@ class ProductAPITest(APITestCase):
 
     def test_update_product(self):
         res = self.client.put(f"/api/products/{self.p1.id}/", {
-            "name": "Gaming Laptop",
+            "title": "Gaming Laptop",
             "category": self.cat.id,
-            "priority": "high"
+            "priority": "high",
+            "price": "1299.99"
         })
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.data["name"], "Gaming Laptop")
+        self.assertEqual(res.data["title"], "Gaming Laptop")
 
     # --- Delete ---
 
@@ -91,13 +95,20 @@ class ProductAPITest(APITestCase):
         res = self.client.get("/api/products/featured/")
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(res.data["results"]), 1)
-        self.assertEqual(res.data["results"][0]["name"], "Laptop")
+        self.assertEqual(res.data["results"][0]["title"], "Laptop")
 
     def test_by_priority(self):
         res = self.client.get("/api/products/by_priority/?level=high")
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(res.data["results"]), 1)
-        self.assertEqual(res.data["results"][0]["name"], "Laptop")
+
+    def test_by_priority_critical(self):
+        Product.objects.create(
+            title="Keyboard", category=self.cat, priority="critical"
+        )
+        res = self.client.get("/api/products/by_priority/?level=critical")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data["results"]), 1)
 
     def test_by_priority_missing_level(self):
         res = self.client.get("/api/products/by_priority/")
@@ -111,27 +122,27 @@ class ProductAPITest(APITestCase):
 
     def test_pagination_structure(self):
         res = self.client.get("/api/products/")
-        self.assertIn("count", res.data)
-        self.assertIn("next", res.data)
-        self.assertIn("previous", res.data)
-        self.assertIn("results", res.data)
+        for key in ["count", "next", "previous", "results"]:
+            self.assertIn(key, res.data)
 
-    # --- New fields in response ---
+    # --- Fields in response ---
 
-    def test_response_includes_featured_and_priority(self):
+    def test_response_includes_all_fields(self):
         res = self.client.get(f"/api/products/{self.p1.id}/")
-        self.assertIn("featured", res.data)
-        self.assertIn("priority", res.data)
-        self.assertTrue(res.data["featured"])
+        for field in ["title", "description", "price", "priority", "is_featured", "image_url", "inventory"]:
+            self.assertIn(field, res.data)
+        self.assertTrue(res.data["is_featured"])
         self.assertEqual(res.data["priority"], "high")
 
 
 class CategoryAPITest(APITestCase):
 
     def setUp(self):
-        self.cat = Category.objects.create(name="Electronics")
-        Category.objects.create(name="Books")
-        Product.objects.create(name="Laptop", category=self.cat, priority="high")
+        self.cat = Category.objects.create(
+            name="Electronics", description="Gadgets"
+        )
+        Category.objects.create(name="Books", description="Reading")
+        Product.objects.create(title="Laptop", category=self.cat, priority="high")
 
     def test_list_categories(self):
         res = self.client.get("/api/categories/")
@@ -142,16 +153,18 @@ class CategoryAPITest(APITestCase):
         res = self.client.get(f"/api/categories/{self.cat.id}/")
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data["name"], "Electronics")
+        self.assertIn("description", res.data)
 
     def test_create_category(self):
-        res = self.client.post("/api/categories/", {"name": "Clothing"})
+        res = self.client.post("/api/categories/", {
+            "name": "Clothing", "description": "Fashion"
+        })
         self.assertEqual(res.status_code, 201)
 
     def test_update_category(self):
-        res = self.client.put(
-            f"/api/categories/{self.cat.id}/",
-            {"name": "Tech"}
-        )
+        res = self.client.put(f"/api/categories/{self.cat.id}/", {
+            "name": "Tech", "description": "Technology"
+        })
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data["name"], "Tech")
 
@@ -161,11 +174,10 @@ class CategoryAPITest(APITestCase):
         self.assertEqual(res.status_code, 204)
 
     def test_category_products(self):
-        """GET /api/categories/{id}/products/ — nested route."""
         res = self.client.get(f"/api/categories/{self.cat.id}/products/")
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(res.data), 1)
-        self.assertEqual(res.data[0]["name"], "Laptop")
+        self.assertEqual(res.data[0]["title"], "Laptop")
 
 
 class EmptyDatasetTest(APITestCase):
