@@ -12,3 +12,9 @@ nav a {
   padding: 10px;
   margin: 10px 0;
 }
+
+.badge {
+  font-size: 0.8em;
+  color: #d4a017;
+  margin-left: 5px;
+}
