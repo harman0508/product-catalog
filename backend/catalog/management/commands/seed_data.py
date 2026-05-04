@@ -16,12 +16,12 @@ class Command(BaseCommand):
         )
 
         products_data = [
-            {"title": "Laptop", "category": electronics, "is_featured": True, "priority": "high", "price": "999.99"},
-            {"title": "Phone", "category": electronics, "is_featured": True, "priority": "high", "price": "699.99"},
-            {"title": "Tablet", "category": electronics, "is_featured": False, "priority": "medium", "price": "449.99"},
-            {"title": "Headphones", "category": electronics, "is_featured": False, "priority": "low", "price": "149.99"},
-            {"title": "Python Cookbook", "category": books, "is_featured": True, "priority": "medium", "price": "44.99"},
-            {"title": "Django Guide", "category": books, "is_featured": False, "priority": "low", "price": "39.99"},
+            {"title": "Laptop", "description": "High-performance laptop", "category": electronics, "is_featured": True, "priority": "high", "price": "999.99"},
+            {"title": "Phone", "description": "Latest smartphone", "category": electronics, "is_featured": True, "priority": "high", "price": "699.99"},
+            {"title": "Tablet", "description": "Portable tablet", "category": electronics, "is_featured": False, "priority": "medium", "price": "449.99"},
+            {"title": "Headphones", "description": "Wireless headphones", "category": electronics, "is_featured": False, "priority": "low", "price": "149.99"},
+            {"title": "Python Cookbook", "description": "Comprehensive Python guide", "category": books, "is_featured": True, "priority": "medium", "price": "44.99"},
+            {"title": "Django Guide", "description": "Django web framework guide", "category": books, "is_featured": False, "priority": "low", "price": "39.99"},
         ]
 
         quantities = [10, 20, 15, 50, 30, 25]
@@ -30,6 +30,7 @@ class Command(BaseCommand):
             product, _ = Product.objects.update_or_create(
                 title=data["title"],
                 defaults={
+                    "description": data["description"],
                     "category": data["category"],
                     "is_featured": data["is_featured"],
                     "priority": data["priority"],
