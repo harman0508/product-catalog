@@ -9,9 +9,10 @@ A production-ready full-stack application for managing and displaying products, 
 ### Backend
 
 * Python 3.8+
-* Django 3.2
+* Django 3.2+
 * Django REST Framework
 * django-filter
+* django-cors-headers
 
 ### Frontend
 
@@ -34,6 +35,7 @@ A production-ready full-stack application for managing and displaying products, 
 * Inventory management (per product)
 * Service Layer (business logic separation)
 * Repository Layer (data access abstraction)
+* Pagination (PageNumberPagination, 10 per page)
 * Filtering:
 
   * Search by product name
@@ -44,8 +46,8 @@ A production-ready full-stack application for managing and displaying products, 
 
 ### Frontend
 
-* Product listing page
-* Search functionality
+* Product listing page with pagination
+* Search functionality (debounced)
 * Category filtering
 * Inventory display
 * Checklist page for requirement verification
@@ -57,9 +59,11 @@ A production-ready full-stack application for managing and displaying products, 
 ## 📁 Project Structure
 
 ```
-product-showcase/
-├── api-server/
+product-catalog/
+├── backend/
 │   ├── manage.py
+│   ├── pytest.ini
+│   ├── requirements.txt
 │   ├── showcase_api/
 │   │   ├── settings.py
 │   │   └── urls.py
@@ -67,20 +71,21 @@ product-showcase/
 │       ├── models.py
 │       ├── serializers.py
 │       ├── views.py
+│       ├── exceptions.py
 │       ├── services/
 │       ├── repositories/
 │       ├── tests/
 │       └── management/commands/
 │
-└── ui-client/
-    └── product-dashboard-react/
-        ├── public/
-        ├── src/
-        │   ├── components/
-        │   ├── pages/
-        │   ├── api/
-        │   └── styles/
-        └── package.json
+└── frontend/
+    ├── public/
+    ├── src/
+    │   ├── components/
+    │   ├── pages/
+    │   ├── api/
+    │   ├── styles/
+    │   └── __tests__/
+    └── package.json
 ```
 
 ---
@@ -90,7 +95,7 @@ product-showcase/
 ### 1. Backend Setup
 
 ```bash
-cd api-server
+cd backend
 
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
@@ -98,6 +103,7 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
+python manage.py makemigrations
 python manage.py migrate
 python manage.py seed_data
 python manage.py runserver
@@ -111,7 +117,7 @@ Backend will run at:
 ### 2. Frontend Setup
 
 ```bash
-cd ui-client/product-dashboard-react
+cd frontend
 
 npm install
 npm start
@@ -129,6 +135,7 @@ Frontend will run at:
 * `GET /api/products/`
 * `GET /api/products/?q=<search>`
 * `GET /api/products/?category=<id>`
+* `GET /api/products/?page=<num>`
 
 ### Categories
 
@@ -172,20 +179,33 @@ Includes:
 ### Run backend tests:
 
 ```bash
+cd backend
 pytest
+```
+
+### Run frontend tests:
+
+```bash
+cd frontend
+npm test
 ```
 
 ### Coverage includes:
 
-* Model tests
-* Service layer tests
-* API endpoint tests
+* Model tests (8 tests — Category, Product, Inventory, relationships, cascade delete)
+* Service layer tests (5 tests — filtering, search, validation)
+* API endpoint tests (13 tests — CRUD, search, filtering, pagination, empty dataset, write rejection)
+* Frontend component tests with mocked API (7 tests — render, data display, error, empty state, category filter, search, loading)
 
 ### Edge Cases Covered:
 
-* Empty dataset
+* Empty dataset (no products, no categories)
 * Invalid query parameters
+* Search with no results
 * API failure handling
+* Write operations rejected (ReadOnlyModelViewSet)
+* One-to-one inventory constraint
+* Cascade delete behavior
 
 ---
 
@@ -193,21 +213,26 @@ pytest
 
 ### 1. Service Layer
 
-Encapsulates business logic and keeps views thin.
+Encapsulates business logic and keeps views thin. Accepts an injectable repository for testability.
 
 ### 2. Repository Layer
 
-Abstracts database queries for better maintainability and scalability.
+Abstracts database queries for better maintainability and scalability. Uses `select_related` for query optimization.
 
-### 3. DRF ViewSets
+### 3. DRF ReadOnlyModelViewSets
 
-Provide clean and scalable API routing.
+Provide clean, scalable, read-only API routing with built-in pagination. Write operations are intentionally disabled since this is a product catalog display application.
 
-### 4. React Component Architecture
+### 4. Custom Exception Handler
+
+Wraps all API errors in a consistent `{ error, status_code }` format.
+
+### 5. React Component Architecture
 
 * Separation of concerns
 * Reusable components
-* Centralized API layer
+* Centralized API layer with error handling
+* Debounced search to reduce API calls
 
 ---
 
@@ -224,18 +249,17 @@ Provide clean and scalable API routing.
 ## ⚠️ Known Limitations
 
 * No authentication/authorization
-* No pagination (can be added easily)
 * No caching layer (Redis not included)
 
 ---
 
 ## 🚀 Future Improvements
 
-* Add pagination & sorting
 * Introduce Redis caching
 * Add CI/CD pipeline
 * Switch to PostgreSQL for production
 * Improve UI/UX design
+* Add authentication
 
 ---
 
