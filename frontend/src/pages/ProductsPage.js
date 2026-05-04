@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { getProducts, getCategories } from "../api/api";
 import SearchBar from "../components/SearchBar";
 import CategoryFilter from "../components/CategoryFilter";
@@ -12,47 +13,26 @@ import ErrorMessage from "../components/ErrorMessage";
  *
  * Main page that composes reusable components for
  * search, filtering, listing, and pagination.
- * Uses debounced search to minimize API calls.
  */
-function ProductsPage() {
+function ProductsPage({ onAddToCart }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
-
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch categories once on mount
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await getCategories();
-        setCategories(data);
-      } catch (err) {
-        setError(err.message);
-      }
-    };
-
-    fetchCategories();
+    getCategories().then(setCategories).catch((err) => setError(err.message));
   }, []);
 
-  // Memoized fetch to avoid stale closures in debounce
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
-      const res = await getProducts({
-        q: query,
-        category,
-        page,
-      });
-
+      const res = await getProducts({ q: query, category, page });
       setProducts(res.data);
       setTotalCount(res.count);
     } catch (err) {
@@ -62,50 +42,29 @@ function ProductsPage() {
     }
   }, [query, category, page]);
 
-  // Debounced product fetch
   useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchProducts();
-    }, 400);
-
+    const delay = setTimeout(() => fetchProducts(), 400);
     return () => clearTimeout(delay);
   }, [fetchProducts]);
 
-  // Reset page when filters change
-  const handleSearch = (value) => {
-    setPage(1);
-    setQuery(value);
-  };
-
-  const handleCategory = (value) => {
-    setPage(1);
-    setCategory(value);
-  };
+  const handleSearch = (value) => { setPage(1); setQuery(value); };
+  const handleCategory = (value) => { setPage(1); setCategory(value); };
 
   return (
     <div>
-      <h1>Products</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Products</h1>
+        <Link to="/products/new" className="btn-primary">+ Add Product</Link>
+      </div>
 
       <SearchBar onSearch={handleSearch} />
-
-      <CategoryFilter
-        categories={categories}
-        onSelect={handleCategory}
-      />
+      <CategoryFilter categories={categories} onSelect={handleCategory} />
 
       {loading && <Loader />}
-
       {error && <ErrorMessage message={error} />}
+      {!loading && !error && <ProductList products={products} onAddToCart={onAddToCart} />}
 
-      {!loading && !error && (
-        <ProductList products={products} />
-      )}
-
-      <Pagination
-        count={totalCount}
-        page={page}
-        setPage={setPage}
-      />
+      <Pagination count={totalCount} page={page} setPage={setPage} />
     </div>
   );
 }
