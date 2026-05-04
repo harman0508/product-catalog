@@ -13,7 +13,7 @@ class ProductRepository:
         qs = Product.objects.select_related("category", "inventory").all()
 
         if query:
-            qs = qs.filter(name__icontains=query)
+            qs = qs.filter(title__icontains=query)
 
         if category:
             qs = qs.filter(category_id=int(category))
@@ -21,7 +21,7 @@ class ProductRepository:
         return qs
 
     def get_featured(self) -> QuerySet:
-        return Product.objects.select_related("category", "inventory").filter(featured=True)
+        return Product.objects.select_related("category", "inventory").filter(is_featured=True)
 
     def get_by_priority(self, level: str) -> QuerySet:
         return Product.objects.select_related("category", "inventory").filter(priority=level)
