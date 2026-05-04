@@ -52,7 +52,7 @@ export const getProducts = async (params = {}) => {
 export const getCategories = async () => {
   try {
     const res = await api.get("/categories/");
-    return res.data;
+    return res.data.results || res.data;
   } catch (error) {
     throw handleError(error);
   }
