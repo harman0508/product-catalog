@@ -1,6 +1,13 @@
 from django.db import models
 
 
+PRIORITY_CHOICES = [
+    ("high", "High"),
+    ("medium", "Medium"),
+    ("low", "Low"),
+]
+
+
 class Category(models.Model):
     name = models.CharField(max_length=255, db_index=True)
 
@@ -14,6 +21,13 @@ class Product(models.Model):
         Category,
         on_delete=models.CASCADE,
         related_name="products"
+    )
+    featured = models.BooleanField(default=False, db_index=True)
+    priority = models.CharField(
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default="medium",
+        db_index=True
     )
 
     def __str__(self):
