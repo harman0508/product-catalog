@@ -5,7 +5,7 @@ from .models import Product, Category, Inventory
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ["id", "name"]
+        fields = ["id", "name", "description", "created_at"]
 
 
 class InventorySerializer(serializers.ModelSerializer):
@@ -21,11 +21,12 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            "id", "name", "category", "category_name",
-            "featured", "priority", "inventory"
+            "id", "title", "description", "category", "category_name",
+            "price", "priority", "is_featured", "image_url",
+            "inventory", "created_at", "updated_at"
         ]
 
-    def validate_name(self, value):
+    def validate_title(self, value):
         if len(value.strip()) < 2:
-            raise serializers.ValidationError("Name too short")
+            raise serializers.ValidationError("Title too short")
         return value
