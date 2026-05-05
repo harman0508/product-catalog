@@ -11,8 +11,9 @@ class ProductService:
     """
     Service layer for product-related business logic.
 
-    Handles filtering, validation, and orchestration between
-    views and repository layer.
+    Handles validation and orchestration between views and repository layer.
+    Note: Basic filtering (search, category, ordering) is handled by DRF's
+    built-in filter backends. This service handles custom business logic.
     """
 
     def __init__(self, repo: Optional[ProductRepository] = None):
